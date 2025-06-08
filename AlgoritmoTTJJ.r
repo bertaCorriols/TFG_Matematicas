@@ -418,10 +418,10 @@ eqNash <- function(MP){
 # Crear un data.frame vacío para almacenar los resultados
 resultados <- data.frame(semilla = integer(), d1_optimo = numeric(), a1_optimo_d1_0 = numeric(), a1_optimo_d1_1 = numeric())
 
-# Resolver el juego para 50 semillas diferentes
-for (i in 1:50) { 
+# Resolver el juego para 20 semillas diferentes
+for (i in 1:20) { 
   set.seed(i)
-  n <- 100
+  n <- 300 # Inicialmente se prueba n=100
   a1_opt_d1_0 <- opt_a1(d1_values[1], n)
   a1_opt_d1_1 <- opt_a1(d1_values[2], n)
   pago_d1_0 <- pago_S1(d1_values[1], a1_opt_d1_0, n)[1]
@@ -452,96 +452,27 @@ table(resultados$a1_optimo_d1_1)
 ##################### RESOLUCIÓN DE UN EJEMPLO REPRESENTATIVO #####################
 ###################################################################################
 
-# Decisiones óptimas de d1 y d2 obtenidas en la sección anterior
-d1 <- 1
+# Decisiones óptimas de d1 y a1 obtenidas en la sección anterior
+# Se pueden ir cambiando para analizar situaciones fuera del equilibrio
+d1 <- 1 
 a1 <- 0.5
 
 # La media de una log-normal es: e^{\mu + \frac{\sigma^2}{2}} 
 s1 <- exp(meanlogS1(d1,a1) + (sdlog^2)/2)
 
-# Reestructuración de funciones que utilizaban m.a.s. de S2 para utilizar su media
-# y para mostrar datos relevantes.
+# Cálculo de d2 óptima y a2 óptima
+# Antes de ejecutarlo hay que quitar los # que hay delante de los "print" de esta función 
+# para ver los resultados que se van obteniendo
+opt_d2_a2(s1,d1,a1,n)
 
-pagoS2_ejemplo <- function(d1, a1, s1, d2, a2){
-  # Cálculos con la media de S2 en lugar de con una m.a.s. de S2
-  s2 <- exp(meanlogS2(a1,d2,a2) + (sdlog^2)/2)
-  pagoD_ejemplo <- uD(d1,d2,s1,s2)
-  pagoA_ejemplo <- uA(a1,a2,s1,s2)
-  return(c(pagoD_ejemplo,pagoA_ejemplo))
-}
+# Cálculo de utilidades utilizando la media de S1 y S2
+d1 <- 0
+a1 <- 1
+s1 <- exp(meanlogS1(d1,a1) + (sdlog^2)/2)
+d2 <- 0
+a2 <- 0.5
+s2 <- exp(meanlogS2(a1,d2,a2) + (sdlog^2)/2)
 
-optd2a2_ejemplo <- function(s1,d1,a1){
-  MD <- matrix(0, nrow = length(d1_values), ncol = length(a1_values))
-  MA <- matrix(0, nrow = length(d1_values), ncol = length(a1_values))
-  for (i in 1:length(d2_values)){
-    for (j in 1:length(a2_values)){
-      pagos <- pagoS2_ejemplo(d1,a1,s1,d2_values[i],a2_values[j])
-      MD[i,j] <- pagos[1]
-      MA[i,j] <- pagos[2]
-    }
-  }
-  MP <- list(MD = MD, MA = MA)
-  equilibrios_nash <- eqNash(MP)
-  d2_probs <- rep(0,length(d2_values))
-  a2_probs <- rep(0,length(a2_values))
-  pagoD <- 0
-  pagoA <- 0
-  
-  # Mostrar matrices de pagos
-  print("Matrices de pagos:")
-  print(MP)
-  
-  if (length(equilibrios_nash$Pure) > 0){
-    d2_index <- match(equilibrios_nash$Pure[[1]][1], d2_values)
-    a2_index <- match(equilibrios_nash$Pure[[1]][2], a2_values)
-    d2_probs[d2_index] <- 1
-    a2_probs[a2_index] <- 1
-    pagoD <- MD[d2_index,a2_index]
-    pagoA <- MA[d2_index,a2_index]
-    
-    # Mostrar índices y pagos en caso de equilibrio puro
-    print("Equilibrio puro encontrado:")
-    print(paste("d2_index:", d2_index, "a2_index:", a2_index))
-    print(paste("pagoD:", pagoD, "pagoA:", pagoA))
-    
-  } else {
-    estrategiasD <- equilibrios_nash$Mixed[[1]]$estrategiasD
-    pD <- equilibrios_nash$Mixed[[1]]$pD
-    estrategiasA <- equilibrios_nash$Mixed[[1]]$estrategiasA
-    pA <- equilibrios_nash$Mixed[[1]]$pA
-    
-    # Mostrar estrategias y probabilidades en caso de equilibrio mixto
-    print("Estrategias mixtas encontradas:")
-    print(paste("estrategiasD:", estrategiasD))
-    print(paste("pD:", pD))
-    print(paste("estrategiasA:", estrategiasA))
-    print(paste("pA:", pA))
-    
-    for (i in 1:length(estrategiasD)) {
-      d2_index <- match(estrategiasD[i], d2_values)
-      d2_probs[d2_index] <- pD[i]
-    }
-    
-    for (i in 1:length(estrategiasA)) {
-      a2_index <- match(estrategiasA[i], a2_values)
-      a2_probs[a2_index] <- pA[i]
-    }
-    
-    for (i in 1:length(d2_values)){
-      for (j in 1:length(a2_values)){
-        pagoD <- pagoD + d2_probs[i]*a2_probs[j]*MD[i,j]
-        pagoA <- pagoA + d2_probs[i]*a2_probs[j]*MA[i,j]
-      }
-    }
-    
-    # Mostrar pagos esperados en caso de equilibrio mixto
-    print(paste("pagoD esperado:", pagoD))
-    print(paste("pagoA esperado:", pagoA))
-    
-  }
-  # print(paste("Fin opt_d2_a2"))
-  return(list(d2_probs, pagoD, a2_probs, pagoA))
-}
+uD(d1,d2,s1,s2)
+uA(a1,a2,s1,s2)
 
-# Cálculo de d2 y a2 óptimas para el ejemplo
-optd2a2_ejemplo(s1,d1,a1)
