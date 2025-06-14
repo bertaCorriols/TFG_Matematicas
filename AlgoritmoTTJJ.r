@@ -63,7 +63,7 @@ intA2 <- -30
 roD <- 0.01  
 roA <- 0.015 
 
-#Funciones de utilidad
+# Funciones de utilidad
 uD <- function(d1,d2,s1,s2){
   utility = 1 - exp(-roD * (-cte_medidas * (d1 + d2) - cteTBcomp * (s1 + s2)
                             - (intD2)))
@@ -85,7 +85,7 @@ uA <- function(a1,a2,s1,s2){
 #### 1) Cálculo de d1 óptima (resolución de {D1})
 #### NOTA: Antes de ejecutar este paso es necesario ejecutar los pasos 2) a 6)
 
-n <- 100 # Tamaño de Montecarlo para las muestras de S1 y S2
+n <- 300 # Tamaño de Montecarlo para las muestras de S1 y S2
 
 # Pagos de D en S1 según el valor de d1
 pago_d1_0 <- pago_S1(d1_values[1], opt_a1(d1_values[1], n), n)[1]
@@ -107,7 +107,7 @@ opt_a1 <- function(d1,n){
 }
 
 #### 3) Función para calcular los pagos de D y A en S1
-#### Se calcula mediante muestreo de Montecarlo
+#### Se calcula mediante simulación de Montecarlo
 pago_S1 <- function(d1,a1,n){
   pagoD <- 0
   pagoA <- 0
@@ -418,10 +418,10 @@ eqNash <- function(MP){
 # Crear un data.frame vacío para almacenar los resultados
 resultados <- data.frame(semilla = integer(), d1_optimo = numeric(), a1_optimo_d1_0 = numeric(), a1_optimo_d1_1 = numeric())
 
-# Resolver el juego para 20 semillas diferentes
+# Resolver el juego para 50 semillas diferentes
 for (i in 1:20) { 
   set.seed(i)
-  n <- 300 # Inicialmente se prueba n=100
+  n <- 300
   a1_opt_d1_0 <- opt_a1(d1_values[1], n)
   a1_opt_d1_1 <- opt_a1(d1_values[2], n)
   pago_d1_0 <- pago_S1(d1_values[1], a1_opt_d1_0, n)[1]
@@ -452,27 +452,14 @@ table(resultados$a1_optimo_d1_1)
 ##################### RESOLUCIÓN DE UN EJEMPLO REPRESENTATIVO #####################
 ###################################################################################
 
-# Decisiones óptimas de d1 y a1 obtenidas en la sección anterior
-# Se pueden ir cambiando para analizar situaciones fuera del equilibrio
-d1 <- 1 
+# Decisiones óptimas de d1 y d2 obtenidas en la sección anterior
+d1 <- 1
 a1 <- 0.5
 
 # La media de una log-normal es: e^{\mu + \frac{\sigma^2}{2}} 
 s1 <- exp(meanlogS1(d1,a1) + (sdlog^2)/2)
 
-# Cálculo de d2 óptima y a2 óptima
-# Antes de ejecutarlo hay que quitar los # que hay delante de los "print" de esta función 
-# para ver los resultados que se van obteniendo
+# Cálculo de d2 óptima y a2 óptima -> antes de ejecutarlo hay que quitar los # que hay
+# delante de los "print" de esta función para ver los resultados
 opt_d2_a2(s1,d1,a1,n)
-
-# Cálculo de utilidades utilizando la media de S1 y S2
-d1 <- 0
-a1 <- 1
-s1 <- exp(meanlogS1(d1,a1) + (sdlog^2)/2)
-d2 <- 0
-a2 <- 0.5
-s2 <- exp(meanlogS2(a1,d2,a2) + (sdlog^2)/2)
-
-uD(d1,d2,s1,s2)
-uA(a1,a2,s1,s2)
 
